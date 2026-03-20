@@ -14,36 +14,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # 1. TRABAJO DE COMPILACIÓN (Crea el paquete de X Linux)
+  # 1. TRABAJO DE COMPILACIÓN (Crea el paquete de X Linux con xpkg)
   build-repo:
     runs-on: ubuntu-latest
-    container: archlinux:base-devel  # Usamos Arch para poder compilar
+    container: archlinux:base-devel
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: Fix permissions & Build Package
-        # makepkg no puede correr como root, creamos un usuario 'builder'
+
+      - name: Install toolchain and xpkg
         run: |
-          pacman -Sy --noconfirm
-          useradd -m builder
-          chown -R builder:builder .
+          pacman -Sy --noconfirm --needed rust cargo git openssl pkgconf
+          cargo install --git https://github.com/xscriptordev/xpkg --locked xpkg
+
+      - name: Build x-release package (XBUILD)
+        run: |
           cd packages/x-release
-          su builder -c "makepkg -sf --noconfirm"
-          
+          ~/.cargo/bin/xpkg build -o /tmp/xpkg-out
+
       - name: Create Repo Database
         run: |
           mkdir -p public/repo/x86_64
-          find packages -name "*.pkg.tar.zst" -exec cp {} public/repo/x86_64/ \;
+          cp /tmp/xpkg-out/*.xp public/repo/x86_64/
+          cp /tmp/xpkg-out/*.xp.sig public/repo/x86_64/
           cd public/repo/x86_64
-          repo-add x.db.tar.gz *.pkg.tar.zst
-          
-          # --- CORRECCIÓN AQUÍ ---
-          # Borramos los enlaces simbólicos automáticos
-          rm x.db x.files
-          # Ahora sí copiamos los archivos reales
+
+          repo-add x.db.tar.gz *.xp
+
           cp x.db.tar.gz x.db
-          cp x.files.tar.gz x.files
+
+          # Keep the detached db signature with stable alias names.
+          if [ -f x.db.tar.gz.sig ]; then
+            cp x.db.tar.gz.sig x.db.sig
+          fi
 
       - name: Upload Repo Artifact
         uses: actions/upload-artifact@v4

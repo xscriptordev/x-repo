@@ -52,16 +52,24 @@ The `packages/` directory contains the X Linux filesystem packages:
 
 System identity and branding package. Includes:
 
-- **`/etc/os-release`** — Operating System Identity
-- **`/etc/default/grub`** — GRUB configuration with X branding
-- **`/usr/lib/os-release`** — Standard Symlink
+- **`/usr/share/x-release/os-release`** — X Linux identity template
+- **`/usr/share/x-release/grub`** — GRUB defaults template
+- **`/usr/share/pixmaps/x.svg`** — Distributor logo
+- **`/usr/bin/x-release-apply`** — Applies branding to the running system
 
 #### Package Installation
 
 ```bash
 cd packages/x-release
-makepkg -si
+xpkg build
+xpm install ./out/x-release-1.0-4-any.xp
+
+# Apply system branding (os-release, GRUB/systemd-boot updates)
+sudo x-release-apply
 ```
+
+`PKGBUILD` is kept for legacy Arch tooling, but `XBUILD` is the native path
+for `xpkg` and `xpm`.
 
 ### Create Package Repository
 
