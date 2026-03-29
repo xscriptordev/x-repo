@@ -43,19 +43,12 @@ jobs:
             [ -e "$pkg" ] || { echo "No .xp packages produced"; exit 1; }
             base="$(basename "$pkg" .xp)"
             cp "$pkg" "public/x/x86_64/$base.xp"
-            # Si existe firma, copiarla también
-            if [ -f "$pkg.sig" ]; then
-              cp "$pkg.sig" "public/x/x86_64/$base.xp.sig"
-            fi
           done
 
           # Clonar paquetes al endpoint pacman renombrando a .pkg.tar.zst
           for pkg in /tmp/xpkg-out/*.xp; do
             base="$(basename "$pkg" .xp)"
             cp "$pkg" "public/repo/x86_64/$base.pkg.tar.zst"
-            if [ -f "$pkg.sig" ]; then
-              cp "$pkg.sig" "public/repo/x86_64/$base.pkg.tar.zst.sig"
-            fi
           done
 
           # Base de datos para xpm (endpoint x/)
@@ -66,14 +59,6 @@ jobs:
             rm -f x.db x.files
             cp x.db.tar.gz x.db
             cp x.files.tar.gz x.files
-            if [ -f x.db.tar.gz.sig ]; then
-              rm -f x.db.sig
-              cp x.db.tar.gz.sig x.db.sig
-            fi
-            if [ -f x.files.tar.gz.sig ]; then
-              rm -f x.files.sig
-              cp x.files.tar.gz.sig x.files.sig
-            fi
           )
 
           # Base de datos para pacman (endpoint repo/)
@@ -84,14 +69,6 @@ jobs:
             rm -f x.db x.files
             cp x.db.tar.gz x.db
             cp x.files.tar.gz x.files
-            if [ -f x.db.tar.gz.sig ]; then
-              rm -f x.db.sig
-              cp x.db.tar.gz.sig x.db.sig
-            fi
-            if [ -f x.files.tar.gz.sig ]; then
-              rm -f x.files.sig
-              cp x.files.tar.gz.sig x.files.sig
-            fi
           )
 
       - name: Upload Repo Artifact
